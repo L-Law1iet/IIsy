@@ -23,8 +23,11 @@
 #
 # @NETFPGA_LICENSE_HEADER_END@
 #
-################################################################################# 
+#################################################################################
 
+import p4runtime_lib.helper
+from p4runtime_lib.switch import ShutdownAllSwitchConnections
+import p4runtime_lib.bmv2
 import argparse
 import os
 import sys
@@ -37,9 +40,6 @@ import time
 sys.path.append(
     os.path.join(os.path.dirname(os.path.abspath(__file__)),
                  '../../utils/'))
-import p4runtime_lib.bmv2
-from p4runtime_lib.switch import ShutdownAllSwitchConnections
-import p4runtime_lib.helper
 
 
 def get_actionpara(action):
@@ -56,7 +56,7 @@ def get_actionpara(action):
     return para
 
 
-def writeclass1x(p4info_helper, switch, a,b, a_square):
+def writeclass1x(p4info_helper, switch, a, b, a_square):
     table_entry = p4info_helper.buildTableEntry(
         table_name="MyIngress.classification",
         match_fields={"hdr.tcp.srcPort": a,
@@ -68,7 +68,6 @@ def writeclass1x(p4info_helper, switch, a,b, a_square):
                        })
     switch.WriteTableEntry(table_entry)
     print("Installed action rule")
-
 
 
 def writeaction(p4info_helper, switch, value, port):
@@ -109,12 +108,11 @@ def main(p4info_file_path, bmv2_file_path):
         s1.SetForwardingPipelineConfig(p4info=p4info_helper.p4info,
                                        bmv2_json_file_path=bmv2_file_path)
         print("Installed P4 Program using SetForwardingPipelineConfig on s1")
-        
 
-	a = [5001, 11211]
-	b = [5001, 38094]
-        for i in range(5000,65536,1000):
-            for j in range(5001,65536):
+        a = [5001, 11211]
+        b = [5001, 38094]
+        for i in range(5000, 65536, 1000):
+            for j in range(5001, 65536):
                 p1 = 5 * i + 5 * j - 150558
                 if (p1 >= 0):
                     p1 = 1
@@ -122,10 +120,8 @@ def main(p4info_file_path, bmv2_file_path):
                     p1 = 2
                 writeclass1x(p4info_helper, s1, i, j, p1)
 
-
         writeaction(p4info_helper, s1, 1, 2)
         writeaction(p4info_helper, s1, 2, 3)
-
 
     except KeyboardInterrupt:
         print("Shutting down.")
@@ -155,9 +151,10 @@ if __name__ == '__main__':
 
     if not os.path.exists(args.bmv2_json):
         parser.print_help()
-        print("\nBMv2 JSON file not found: %s\nHave you run 'make'?" % args.bmv2_json)
+        print("\nBMv2 JSON file not found: %s\nHave you run 'make'?" %
+              args.bmv2_json)
         parser.exit(1)
     start = time.time()
     main(args.p4info, args.bmv2_json)
     end = time.time()
-    print("loading time is :" ,(end -start))
+    print("loading time is :", (end - start))
